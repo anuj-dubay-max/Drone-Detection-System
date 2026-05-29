@@ -1,102 +1,168 @@
 # Drone Detection System
 
-Detects drones in real-time using two YOLOv8 models — one for drones, one for birds. When a drone triggers a HIGH or CRITICAL threat, the system sends an email with a screenshot attached and logs the incident to a local database.
+A real-time drone surveillance and threat assessment system built using YOLOv8, OpenCV, SQLite, and automated email alerts.
 
-Built as a desktop app with OpenCV. No web server, no Streamlit — just a Python script that opens a window and runs.
-
----
-
-## What it actually does
-
-Runs two YOLO models on every frame. The bird model's detections are used to filter out false positives from the drone model — if a detected box overlaps with a bird detection, it gets dropped. There's also an aspect ratio and area filter for cases where the bird model misses something.
-
-Each confirmed drone gets a persistent track ID. The system calculates speed from the track history and plots a trajectory trail on screen. A restricted zone (draggable rectangle) sits in the middle of the frame — anything that enters it triggers CRITICAL. Approaching drones get scored HIGH or MEDIUM depending on distance and speed.
-
-On HIGH or CRITICAL: an email goes out with a screenshot of the frame, the incident gets logged to SQLite, and a deflection method gets selected (laser, net launcher, or RF jammer depending on distance). The jammer shows as pulsing circles on screen.
-
-There's also a separate `database_viewer.py` you can run to query the database, export CSVs, or generate a report.
+The system detects drones from live camera feeds, tracks their movement, evaluates threat levels, logs incidents to a database, and notifies operators when potential threats are detected.
 
 ---
 
-## Setup
+## Features
+
+* Real-time drone detection using YOLOv8
+* Bird filtering to reduce false positives
+* Persistent drone tracking with unique IDs
+* Speed and trajectory estimation
+* Threat classification (LOW, MEDIUM, HIGH, CRITICAL)
+* Restricted zone intrusion detection
+* Automated email alerts with screenshots
+* SQLite-based incident logging
+* Drone deflection strategy recommendations
+* Database viewer with CSV export support
+
+---
+
+## System Overview
+
+The application processes video frames from a webcam, IP camera, mobile camera stream, or recorded video file.
+
+Detected drones are tracked across frames, allowing the system to estimate movement patterns and speed. A configurable restricted zone is monitored continuously. Drones entering this zone are classified as critical threats and trigger immediate alerts.
+
+Each incident is logged to a local SQLite database, and screenshots can be automatically attached to email notifications.
+
+---
+
+## Project Structure
+
+```text
+Drone-Detection-System/
+│
+├── dds.py
+├── alert_integration.py
+├── database_viewer.py
+├── requirements.txt
+├── README.md
+└── .gitignore
+```
+
+---
+
+## Installation
+
+Clone the repository:
 
 ```bash
-git clone https://github.com/anuj-dubay-max/Drone-Detection-System
+git clone https://github.com/anuj-dubay-max/Drone-Detection-System.git
 cd Drone-Detection-System
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
-You need two model files in the project folder:
-- `model.pt` — trained drone detector
-- `bird.pt` — bird detector for false positive filtering
+---
 
-Both are too large for GitHub. Download them from [Google Drive link here].
+## Model Files
 
-Then run:
+The trained YOLO model files are not included in this repository because of their size.
 
-```bash
-python DDS.py
+Place the required model files in the project directory before running the application:
+
+```text
+model.pt
+bird.pt
 ```
-
-Pick your input source (laptop camera, phone stream, or video file) and the window opens.
 
 ---
 
-## Email alerts
+## Running the System
 
-The system sends an email with a screenshot attached every time a HIGH or CRITICAL threat is detected (with a cooldown so you don't get flooded).
+```bash
+python dds.py
+```
 
-Edit these lines near the top of `DDS.py`:
+Choose an input source:
+
+* Laptop webcam
+* Mobile camera stream (DroidCam)
+* Video file
+
+The system will open a real-time monitoring window and begin processing frames.
+
+---
+
+## Email Alerts
+
+The application can automatically send email notifications whenever a HIGH or CRITICAL threat is detected.
+
+Configure your email settings in the alert configuration section:
 
 ```python
 alert_system.configure_email(
-    smtp_server='smtp.gmail.com',
+    smtp_server="smtp.gmail.com",
     smtp_port=587,
-    from_email='your_email@gmail.com',
-    from_password='your_app_password',  # NOT your Gmail password
-    to_email='recipient@gmail.com'
+    from_email="your_email@gmail.com",
+    from_password="your_app_password",
+    to_email="recipient@gmail.com"
 )
 ```
 
-For Gmail, you need an App Password — go to myaccount.google.com → Security → 2FA → App Passwords and generate one.
-
-Telegram alerts are also supported. Add your bot token and chat_id in the same section. Get a token from @BotFather on Telegram.
+For Gmail accounts, use an App Password instead of your normal account password.
 
 ---
 
-## Training your own model
+## Database Viewer
 
-`train_drone_model.py` handles the full pipeline — dataset download from Roboflow, training, and saving the result as `model.pt`.
-
-```bash
-pip install roboflow
-# Set your API key inside train_drone_model.py, then:
-python train_drone_model.py
-```
-
-Use `best.pt` from `runs/detect/drone_v1/weights/`, not `last.pt`. If validation loss was still dropping when training stopped, run more epochs.
-
----
-
-## Database viewer
+Launch the database viewer:
 
 ```bash
 python database_viewer.py
 ```
 
-Shows overall stats, recent detections, incidents log, and per-drone breakdown. Can export everything to CSV.
+The viewer provides:
+
+* Detection history
+* Threat statistics
+* Incident logs
+* CSV export functionality
+* Summary reports
 
 ---
 
 ## Controls
 
-While the detection window is open:
-- `q` — quit
-- `s` — save a screenshot
-- drag the rectangle corners to reposition the restricted zone
+While the monitoring window is active:
+
+| Key | Action           |
+| --- | ---------------- |
+| q   | Quit application |
+| s   | Save screenshot  |
+
+The restricted zone can also be repositioned by dragging its corners.
 
 ---
 
-## Stack
+## Technologies Used
 
-YOLOv8 (Ultralytics) · OpenCV · SQLite · Gmail SMTP · Telegram Bot API
+* Python
+* YOLOv8 (Ultralytics)
+* OpenCV
+* SQLite
+* NumPy
+* SMTP Email Integration
+
+---
+
+## Future Improvements
+
+* Multi-camera monitoring
+* Drone type classification
+* Web dashboard
+* GPS integration
+* Advanced counter-drone analytics
+
+---
+
+
+
